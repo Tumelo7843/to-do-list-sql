@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      input[type="text"],
+      input[type="number"] {
+        padding: 10px;
+        margin: 5px 0;
+        width: calc(100% - 22px);
+        box-sizing: border-box;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      .high {
+        background-color: red;
+      }
+      .medium {
+        background-color: orange;
+      }
+      .low {
+        background-color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>TO DO LIST</h1>
+    <input type="text" id="itemInput" placeholder="Add new item" />
+    <button id="addItemButton" onclick="addShoppingItem()">Add Item</button>
+    <ul id="shoppingList" onclick="editItem()"></ul>
+    <script>
+      let db;
+      async function initDb() {
+            document.designMode = 'on';
+        const SQL = (locateFile = await initSqlJs({
+          locateFile: (file) =>
+            `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`,
+        }));
+        db = new SQL.Database();
+        db.run(
+          "CREATE TABLE shoppingList (id INTEGER PRIMARY KEY, item TEXT)"
+        );
+        console.log("Database initialized");
+        displayShoppingList();
+      }
+      initDb();
+      function addShoppingItem() {
+        const item = document.getElementById("itemInput").value;
+        
+        if (item) {
+          db.run("INSERT INTO shoppingList (item) VALUES (?)", [
+            item,
+          ]);
+          console.log("Item added:", item);
+        } else {
+          console.log("Invalid input");
+        }
+        displayShoppingList();
+      }
+      function displayShoppingList() {
+        
+        const res = db.exec("SELECT * FROM shoppingList");
+        const shoppingList = document.getElementById("shoppingList");
+        shoppingList.innerHTML = "";
+        console.log("Current shopping list:", res);
+        if (res.length > 0) {
+          res[0].values.forEach(([id, item]) => {
+            const li = document.createElement("li");
+            li.innerHTML = `${item} 
+            <select> <option value="high" class="high">High</option> 
+              <option value="medium" class="medium">Medium</option> 
+              <option value="low" class="low">Low</option>
+            </select><button onclick="remove(${id})" style="cursor: pointer;">X</button>`;
+            shoppingList.appendChild(li);
+          });
+        } else {
+          shoppingList.innerHTML = "<li>No list.</li>";
+        }
+      }
+      function remove(id) {
+        db.run("DELETE FROM shoppingList WHERE id = ?", [id]);
+        displayShoppingList();
+      }
+       function editItem(index, newValue) {
+      list[index].item = newValue;
+      renderList();
+      displayShoppingList();
+    }
+
+
+
+    
+    </script>
+  </body>
+</html>

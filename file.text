@@ -1,0 +1,46 @@
+   function displayShoppingList() {
+  const res = db.exec("SELECT * FROM shoppingList");
+  const shoppingList = document.getElementById("shoppingList");
+  shoppingList.innerHTML = "";
+
+  if (res.length > 0) {
+    res[0].values.forEach(([id, item]) => {
+      const li = document.createElement("li");
+
+      // Editable text
+      const span = document.createElement("span");
+      span.textContent = item;
+      span.contentEditable = "true";
+
+      // Save to DB on edit
+      span.addEventListener("blur", () => {
+        const newValue = span.textContent.trim();
+        db.run("UPDATE shoppingList SET item = ? WHERE id = ?", [newValue, id]);
+        console.log("Updated:", id, newValue);
+      });
+
+      // Priority dropdown
+      const select = document.createElement("select");
+      select.innerHTML = `
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      `;
+
+      // Delete button
+      const btn = document.createElement("button");
+      btn.textContent = "X";
+      btn.style.cursor = "pointer";
+      btn.onclick = () => remove(id);
+
+      // Put it all together
+      li.appendChild(span);
+      li.appendChild(select);
+      li.appendChild(btn);
+
+      shoppingList.appendChild(li);
+    });
+  } else {
+    shoppingList.innerHTML = "<li>No list.</li>";
+  }
+}
